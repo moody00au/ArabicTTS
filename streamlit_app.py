@@ -34,7 +34,7 @@ def add_diacritics(text):
             frequency_penalty=0,
             presence_penalty=0
         )
-        diacritized_text = response.get('choices')[0].get('message').get('content')
+        diacritized_text = response.choices[0].message.content
         
         return diacritized_text
     except Exception as e:
