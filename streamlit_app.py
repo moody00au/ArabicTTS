@@ -1,16 +1,13 @@
 import streamlit as st
 import openai
-import os
 from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
-import json
-import docx
-import fitz  # PyMuPDF
 
+# Initialize the OpenAI client
 client = OpenAI()
 
-# Define available voice models
+# Define available voice models with user-friendly Arabic names
 voice_options = {
     "Hala": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
     "Sami": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
@@ -21,7 +18,6 @@ voice_options = {
     "Sultan": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
     "Sarah": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
 }
-
 
 # Retrieve your OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -49,7 +45,6 @@ def add_diacritics(text):
             presence_penalty=0
         )
         diacritized_text = response.choices[0].message.content
-        
         return diacritized_text
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
@@ -69,34 +64,14 @@ def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender)
     )
     return response.audio_content
 
-
-def read_text_file(file):
-    """Read text from the uploaded file based on its type."""
-    if file.type == "application/pdf":
-        text = ""
-        with fitz.open(stream=file.getvalue(), filetype="pdf") as doc:
-            for page in doc:
-                text += page.get_text()
-    elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        doc = docx.Document(file)
-        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
-    else:
-        # Assuming the uploaded file is UTF-8 encoded text
-        text = file.getvalue().decode("utf-8")
-    return text
-
 # Streamlit UI
 st.title("Arabic Text Harakat and Text to Speech Application")
 
 # Voice selection
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
 
-# Text input/upload
-user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي")
-uploaded_file = st.file_uploader("Or upload a text file, Word document, or PDF:", type=["txt", "docx", "pdf"])
-
-if uploaded_file is not None:
-    user_input = read_text_file(uploaded_file)
+# Text input with a maximum of 5000 characters
+user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000)
 
 if st.button("Convert to Speech"):
     if user_input:
@@ -116,4 +91,4 @@ if st.button("Convert to Speech"):
             except Exception as e:
                 st.error(f"Failed to generate speech: {str(e)}")
     else:
-        st.error("Please input text or upload a file.")
+        st.error("Please input text.")
