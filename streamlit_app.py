@@ -44,7 +44,8 @@ google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentia
 def apply_sukoon(text):
     # Arabic diacritics range, excluding sukoon
     diacritics = "[\u064B-\u0651\u0653-\u0654\u0670]"
-    pattern = re.compile(f"({diacritics})(?=[.,])")
+    # Include Arabic comma (،) in the pattern
+    pattern = re.compile(f"({diacritics})(?=[.,،])")
 
     def replace_with_sukoon(match):
         return "\u0652"  # sukoon
