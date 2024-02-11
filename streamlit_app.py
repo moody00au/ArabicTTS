@@ -8,6 +8,7 @@ import json
 
 client = OpenAI()
 
+
 # Retrieve your OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -19,8 +20,8 @@ google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentia
 
 def add_diacritics(text):
     try:
-        response = client.Completion.create(
-            model="gpt-4",
+            response = client.chat.completions.create(
+            model="gpt-4-turbo-preview",
             prompt=f"Add diacritics to this Arabic text: '{text}'.",
             temperature=0.7,
             max_tokens=3000
