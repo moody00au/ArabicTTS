@@ -15,14 +15,14 @@ google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentia
 
 def add_diacritics(text):
     try:
-        response = openai.ChatCompletion.create(
+        response = openai.Completion.create(
             model="gpt-4",
-            messages=[{"role": "system", "content": "Add diacritics to this Arabic text:"},
-                      {"role": "user", "content": text}],
+            prompt=f"Add diacritics to this Arabic text: '{text}'.",
             temperature=0.7,
             max_tokens=3000
         )
-        return response['choices'][0]['message']['content']
+        # Adjusted to match the new response structure
+        return response.choices[0].text.strip()
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
