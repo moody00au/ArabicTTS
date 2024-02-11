@@ -34,8 +34,9 @@ def add_diacritics(text):
             frequency_penalty=0,
             presence_penalty=0
         )
-        # Adjusted to match the new response structure
-        return response.choices[0].text.strip()
+        # Assuming the response structure is similar to GPT-3's chat interface
+        # Adjusted to correctly access the response text
+        return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
