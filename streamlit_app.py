@@ -34,13 +34,7 @@ def add_diacritics(text):
             frequency_penalty=0,
             presence_penalty=0
         )
-        # Assuming the response object has an attribute to access the completion directly
-        # This is a placeholder; you'll need to replace it with the correct method or property
-        # For example, if the response object has a method .get_content() to get the text
-        # Or if the response object's structure is known and documented, access it accordingly
-        
-        # If the response directly contains the completion text in an attribute
-        diacritized_text = response.choices[0].message['content']
+        diacritized_text = response.get('choices')[0].get('message').get('content')
         
         return diacritized_text
     except Exception as e:
