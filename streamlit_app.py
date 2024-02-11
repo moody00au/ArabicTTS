@@ -12,14 +12,14 @@ client = OpenAI()
 
 # Define available voice models
 voice_options = {
-    "Arabic Female Standard A": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "Arabic Male Standard B": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
-    "Arabic Male Standard C": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
-    "Arabic Female Standard D": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE),
-    "Arabic Female WaveNet A": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "Arabic Male WaveNet B": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE),
-    "Arabic Male WaveNet C": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
-    "Arabic Female WaveNet D": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
+    "Hala": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
+    "Sami": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
+    "Omar": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
+    "Samar": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE),
+    "Shireen": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE),
+    "Hadi": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE),
+    "Sultan": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
+    "Sarah": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
 }
 
 
@@ -93,7 +93,7 @@ selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()
 
 # Text input/upload
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي")
-uploaded_file = st.file_uploader("Or upload a text, docx or pdf file:", type=["txt"])
+uploaded_file = st.file_uploader("Or upload a text file, Word document, or PDF:", type=["txt", "docx", "pdf"])
 
 if uploaded_file is not None:
     user_input = read_text_file(uploaded_file)
