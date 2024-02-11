@@ -10,7 +10,6 @@ client = OpenAI()
 
 # Define available voice models
 voice_options = {
-    "Afrikaans (South Africa) Female": ("af-ZA", "af-ZA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
     "Arabic Female Standard A": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
     "Arabic Male Standard B": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
     "Arabic Male Standard C": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
