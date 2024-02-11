@@ -5,6 +5,8 @@ from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 import json
+import docx
+import fitz  # PyMuPDF
 
 client = OpenAI()
 
@@ -69,10 +71,19 @@ def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender)
 
 
 def read_text_file(file):
-    """Read text from the uploaded file."""
-    text = file.read()
-    # Assuming the uploaded file is UTF-8 encoded text
-    return text.decode("utf-8")
+    """Read text from the uploaded file based on its type."""
+    if file.type == "application/pdf":
+        text = ""
+        with fitz.open(stream=file.getvalue(), filetype="pdf") as doc:
+            for page in doc:
+                text += page.get_text()
+    elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        doc = docx.Document(file)
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+    else:
+        # Assuming the uploaded file is UTF-8 encoded text
+        text = file.getvalue().decode("utf-8")
+    return text
 
 # Streamlit UI
 st.title("Arabic Text Harakat and Text to Speech Application")
@@ -82,7 +93,7 @@ selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()
 
 # Text input/upload
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي")
-uploaded_file = st.file_uploader("Or upload a text file:", type=["txt"])
+uploaded_file = st.file_uploader("Or upload a text, docx or pdf file:", type=["txt"])
 
 if uploaded_file is not None:
     user_input = read_text_file(uploaded_file)
