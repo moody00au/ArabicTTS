@@ -35,7 +35,7 @@ def add_diacritics(text):
             messages=[
                 {
                     "role": "user",
-                    "content": f"Add diacritics to this Arabic text: '{text}'."
+                    "content": f"Please Add diacritics to this Arabic text, except for the last letter of a sentence before a comma or full stop, that should ALWAYS be a sukoon: '{text}'."
                 }
             ],
             temperature=1,
