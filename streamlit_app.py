@@ -34,25 +34,27 @@ voice_options = {
     "Sarah": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
 }
 
-# Retrieve your OpenAI API key from Streamlit secrets
+# Retrieve API key and Google Cloud credentials
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-
-# Parse the Google Cloud credentials from Streamlit secrets directly
-google_credentials = service_account.Credentials.from_service_account_info(
-    st.secrets["GOOGLE_CLOUD_CREDENTIALS"]
-)
+google_credentials = service_account.Credentials.from_service_account_info(st.secrets["GOOGLE_CLOUD_CREDENTIALS"])
 google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentials)
+
+def apply_sukoon(text):
+    # Arabic diacritics range, excluding sukoon
+    diacritics = "[\u064B-\u0651\u0653-\u0654\u0670]"
+    pattern = re.compile(f"({diacritics})(?=[.,])")
+
+    def replace_with_sukoon(match):
+        return "\u0652"  # sukoon
+
+    adjusted_text = re.sub(pattern, replace_with_sukoon, text)
+    return adjusted_text
 
 def add_diacritics(text):
     try:
         response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Please Add diacritics to this Arabic text, except for the last letter of a sentence before a comma or full stop, that should ALWAYS be a sukoon: '{text}'."
-                }
-            ],
+            messages=[{"role": "user", "content": f"Add diacritics to this Arabic text: '{text}'."}],
             temperature=1,
             max_tokens=3000,
             top_p=1,
@@ -60,30 +62,16 @@ def add_diacritics(text):
             presence_penalty=0
         )
         diacritized_text = response.choices[0].message.content
-        return diacritized_text
+        # Apply sukoon to the diacritized text
+        adjusted_text = apply_sukoon(diacritized_text)
+        return adjusted_text
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
-def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender):
-    synthesis_input = texttospeech.SynthesisInput(text=text_with_harakat)
-    voice = texttospeech.VoiceSelectionParams(
-        language_code=language_code,
-        name=voice_name,
-        ssml_gender=ssml_gender
-    )
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
-    response = google_tts_client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
-    return response.audio_content
-
-# Streamlit UI setup
+# Streamlit UI
 st.title("Arabic Text Harakat and Text to Speech Application")
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
 
-# Text input with a maximum of 5000 characters and a larger fixed height to minimize scrolling
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300)
 
 if st.button("Convert to Speech"):
@@ -91,13 +79,13 @@ if st.button("Convert to Speech"):
         with st.spinner('Adding diacritics...'):
             diacritized_text = add_diacritics(user_input)
             if not diacritized_text.startswith("Failed"):
+                # Display the adjusted text with sukoon applied
                 st.text_area("Diacritized Text", diacritized_text, height=300, max_chars=5000)
             else:
                 st.error(diacritized_text)
         
         with st.spinner('Generating Speech...'):
             try:
-                # Get the selected voice configuration
                 language_code, voice_name, ssml_gender = voice_options[selected_voice]
                 audio_data = synthesize_speech(diacritized_text, language_code, voice_name, ssml_gender)
                 st.audio(audio_data, format='audio/mp3')
