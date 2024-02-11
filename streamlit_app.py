@@ -4,7 +4,7 @@ from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 
-# Custom CSS to set the text area to RTL
+# Custom CSS to set the text area to RTL and potentially adjust its style
 st.markdown(
     """
     <style>
@@ -12,6 +12,7 @@ st.markdown(
     textarea {
         direction: RTL; /* Right to Left */
         text-align: right; /* Align text to the right */
+        height: 300px !important; /* Example of setting a larger fixed height */
     }
     </style>
     """,
@@ -78,21 +79,19 @@ def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender)
     )
     return response.audio_content
 
-# Streamlit UI
+# Streamlit UI setup
 st.title("Arabic Text Harakat and Text to Speech Application")
-
-# Voice selection
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
 
-# Text input with a maximum of 5000 characters, automatically limiting input
-user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000)
+# Text input with a maximum of 5000 characters and a larger fixed height to minimize scrolling
+user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300)
 
 if st.button("Convert to Speech"):
     if user_input:
         with st.spinner('Adding diacritics...'):
             diacritized_text = add_diacritics(user_input)
             if not diacritized_text.startswith("Failed"):
-                st.text_area("Diacritized Text", diacritized_text, height=150, max_chars=5000)
+                st.text_area("Diacritized Text", diacritized_text, height=300, max_chars=5000)
             else:
                 st.error(diacritized_text)
         
