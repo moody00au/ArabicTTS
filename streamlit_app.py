@@ -22,10 +22,18 @@ def add_diacritics(text):
     try:
             response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
-            prompt=f"Add diacritics to this Arabic text: '{text}'.",
-            temperature=0.7,
-            max_tokens=3000
-        )
+            messages=[
+                {
+                  "role": "user",
+                  "content": =f"Add diacritics to this Arabic text: '{text}'.",
+                }
+                  ],
+                  temperature=1,
+                  max_tokens=3000,
+                  top_p=1,
+                  frequency_penalty=0,
+                  presence_penalty=0
+                )
         # Adjusted to match the new response structure
         return response.choices[0].text.strip()
     except Exception as e:
