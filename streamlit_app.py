@@ -7,7 +7,7 @@ import json
 # Retrieve your OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# Directly use the Google Cloud credentials from Streamlit secrets
+# Parse the Google Cloud credentials from Streamlit secrets directly
 google_credentials = service_account.Credentials.from_service_account_info(
     st.secrets["GOOGLE_CLOUD_CREDENTIALS"]
 )
