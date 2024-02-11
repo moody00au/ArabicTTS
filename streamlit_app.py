@@ -7,9 +7,9 @@ import json
 # Retrieve your OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# Parse the Google Cloud credentials from Streamlit secrets
+# Directly use the Google Cloud credentials from Streamlit secrets
 google_credentials = service_account.Credentials.from_service_account_info(
-    json.loads(st.secrets["GOOGLE_CLOUD_CREDENTIALS"])
+    st.secrets["GOOGLE_CLOUD_CREDENTIALS"]
 )
 google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentials)
 
