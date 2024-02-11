@@ -3,6 +3,8 @@ import openai
 from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
+import re
+
 
 # Custom CSS to set the text area to RTL and potentially adjust its style
 st.markdown(
@@ -68,6 +70,21 @@ def add_diacritics(text):
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
+def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender):
+    synthesis_input = texttospeech.SynthesisInput(text=text_with_harakat)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code=language_code,
+        name=voice_name,
+        ssml_gender=ssml_gender
+    )
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    )
+    response = google_tts_client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
+    return response.audio_content
+    
 # Streamlit UI
 st.title("Arabic Text Harakat and Text to Speech Application")
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
