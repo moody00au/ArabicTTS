@@ -27,14 +27,14 @@ client = OpenAI()
 
 # Define available voice models with user-friendly Arabic names
 voice_options = {
-    "Hala": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "Sami": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
-    "Omar": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
-    "Samar": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE),
-    "Shireen": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "Hadi": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE),
-    "Sultan": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
-    "Sarah": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
+    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
+    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
+    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
+    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE),
+    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE),
+    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE),
+    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
+    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
 }
 
 # Retrieve API key and Google Cloud credentials
@@ -54,7 +54,7 @@ def add_diacritics(text):
     try:
         response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
-            messages=[{"role": "user", "content": f"Add diacritics to this Arabic text: '{text}'."}],
+            messages=[{"role": "user", "content": f"أضف الحركات لهذا النص العربي: '{text}'."}],
             temperature=1,
             max_tokens=3000,
             top_p=1,
@@ -65,7 +65,7 @@ def add_diacritics(text):
         adjusted_text = apply_sukoon(diacritized_text)
         return adjusted_text
     except Exception as e:
-        st.error(f"Failed to add diacritics: {str(e)}")
+        st.error(f"فشل في إضافة الحركات: {str(e)}")
         return None
 
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
@@ -85,25 +85,25 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     return response.audio_content
 
 # App title
-st.title("Arabic Text Harakat and Text to Speech Application")
+st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
 
 # Step 1: Input text and add diacritics
-user_input = st.text_area("Enter Arabic text here:", value="", height=300, key="user_text_input")
-if st.button("Add Diacritics"):
+user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
+if st.button("إضافة الحركات"):
     diacritized_text = add_diacritics(user_input)
     if diacritized_text:
         # Save diacritized text in session state for further actions
         st.session_state['diacritized_text'] = diacritized_text
-        st.text_area("Review the diacritized text:", value=diacritized_text, height=300, key="diacritized_text_input", disabled=True)
+        st.text_area("مراجعة النص مع الحركات:", value=diacritized_text, height=300, key="diacritized_text_input", disabled=True)
 
 # Step 2: Modify diacritized text if needed
 if 'diacritized_text' in st.session_state:
-    modified_text = st.text_area("Modify the diacritized text as needed:", value=st.session_state['diacritized_text'], height=300, key="modified_text_input")
+    modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=st.session_state['diacritized_text'], height=300, key="modified_text_input")
 
-    selected_voice = st.selectbox("Choose a voice model:", options=list(voice_options.keys()), key="voice_model_select")
-    speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
+    selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()), key="voice_model_select")
+    speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
-    if st.button("Convert to Speech"):
+    if st.button("تحويل إلى كلام"):
         if modified_text:
             language_code, voice_name, ssml_gender = voice_options[selected_voice]
             audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
@@ -113,7 +113,7 @@ if 'diacritized_text' in st.session_state:
             audio_file.name = formatted_now
             st.audio(audio_data, format='audio/mp3')
             st.download_button(
-                label="Download Speech",
+                label="تحميل الكلام",
                 data=audio_file,
                 file_name=formatted_now,
                 mime="audio/mp3"
