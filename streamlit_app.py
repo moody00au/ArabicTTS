@@ -84,19 +84,27 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     )
     return response.audio_content
 
+# App title
 st.title("Arabic Text Harakat and Text to Speech Application")
 
-selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()), key="voice_model_select")
+# Step 1: Input text and add diacritics
+user_input = st.text_area("Enter Arabic text here:", value="", height=300, key="user_text_input")
+if st.button("Add Diacritics"):
+    diacritized_text = add_diacritics(user_input)
+    if diacritized_text:
+        # Save diacritized text in session state for further actions
+        st.session_state['diacritized_text'] = diacritized_text
+        st.text_area("Review the diacritized text:", value=diacritized_text, height=300, key="diacritized_text_input", disabled=True)
 
-user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300, key="user_text_input")
+# Step 2: Modify diacritized text if needed
+if 'diacritized_text' in st.session_state:
+    modified_text = st.text_area("Modify the diacritized text as needed:", value=st.session_state['diacritized_text'], height=300, key="modified_text_input")
 
-speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
+    selected_voice = st.selectbox("Choose a voice model:", options=list(voice_options.keys()), key="voice_model_select")
+    speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
-if st.button("Add Diacritics and Convert to Speech"):
-    if user_input:
-        diacritized_text = add_diacritics(user_input)
-        if diacritized_text:
-            modified_text = st.text_area("Modify the diacritized text as needed:", diacritized_text, height=300, max_chars=5000, key="modified_text_input")
+    if st.button("Convert to Speech"):
+        if modified_text:
             language_code, voice_name, ssml_gender = voice_options[selected_voice]
             audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
             now = datetime.datetime.now()
@@ -110,5 +118,3 @@ if st.button("Add Diacritics and Convert to Speech"):
                 file_name=formatted_now,
                 mime="audio/mp3"
             )
-    else:
-        st.error("Please input text.")
