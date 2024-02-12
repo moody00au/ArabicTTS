@@ -71,7 +71,7 @@ def add_diacritics(text):
         return f"Failed to add diacritics: {str(e)}"
 
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
-    synthesis_input = texttospeech.SynthesisInput(text=text_with_harakat)
+    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)  # Corrected variable reference
     voice = texttospeech.VoiceSelectionParams(
         language_code=language_code,
         name=voice_name,
@@ -96,16 +96,17 @@ voice_samples = {
     for voice in voice_options.keys()
 }
 
-selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
+# Add unique keys to widgets to avoid internal key conflicts
+selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()), key="voice_model_select")
 
-# Use the dynamic URL from the dictionary
-voice_sample_url = voice_samples[selected_voice]
-st.audio(voice_sample_url, format='audio/mp3')
+# Assuming the samples are stored in the 'samples' folder in your GitHub repo
+voice_sample_url = f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{selected_voice}_sample.mp3"
+st.audio(voice_sample_url, format='audio/mp3', key=f"voice_sample_{selected_voice}")
 
-user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300)
+user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300, key="user_text_input")
 
 # TTS speed option
-speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0)
+speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
 if st.button("Convert to Speech"):
     if user_input:
