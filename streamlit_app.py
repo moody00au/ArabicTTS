@@ -70,8 +70,9 @@ def add_diacritics(text):
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
+# Corrected `synthesize_speech` function to use the correct argument
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
-    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)  # Corrected variable reference
+    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)  # Use the function argument
     voice = texttospeech.VoiceSelectionParams(
         language_code=language_code,
         name=voice_name,
@@ -86,9 +87,9 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     )
     return response.audio_content
 
+
 # Streamlit UI for selecting voice model
 st.title("Arabic Text Harakat and Text to Speech Application")
-selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
 
 # Assuming each voice has a corresponding sample in the specified URL structure
 voice_samples = {
@@ -101,7 +102,7 @@ selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()
 
 # Assuming the samples are stored in the 'samples' folder in your GitHub repo
 voice_sample_url = f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{selected_voice}_sample.mp3"
-st.audio(voice_sample_url, format='audio/mp3', key=f"voice_sample_{selected_voice}")
+st.audio(voice_sample_url, format='audio/mp3')
 
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300, key="user_text_input")
 
