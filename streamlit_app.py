@@ -86,6 +86,12 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     )
     return response.audio_content
 
+# Initialize session state for selected voice and speech speed
+if 'selected_voice' not in st.session_state:
+    st.session_state.selected_voice = list(voice_options.keys())[0]  # Default to first option
+if 'speech_speed' not in st.session_state:
+    st.session_state.speech_speed = 1.0  # Default speed
+
 # App title and introduction
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
 
