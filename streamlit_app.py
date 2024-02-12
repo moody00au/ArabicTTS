@@ -4,6 +4,8 @@ from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 import re
+import datetime
+import io
 
 # Custom CSS to set the text area to RTL and potentially adjust its style
 st.markdown(
@@ -41,14 +43,10 @@ google_credentials = service_account.Credentials.from_service_account_info(st.se
 google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentials)
 
 def apply_sukoon(text):
-    # Arabic diacritics range, excluding sukoon
     diacritics = "[\u064B-\u0651\u0653-\u0654\u0670]"
-    # Include Arabic comma (،) in the pattern
     pattern = re.compile(f"({diacritics})(?=[.,،])")
-
     def replace_with_sukoon(match):
-        return "\u0652"  # sukoon
-
+        return "\u0652"
     adjusted_text = re.sub(pattern, replace_with_sukoon, text)
     return adjusted_text
 
@@ -64,15 +62,13 @@ def add_diacritics(text):
             presence_penalty=0
         )
         diacritized_text = response.choices[0].message.content
-        # Apply sukoon to the diacritized text
         adjusted_text = apply_sukoon(diacritized_text)
         return adjusted_text
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
-# Corrected `synthesize_speech` function to use the correct argument
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
-    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)  # Use the function argument
+    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)
     voice = texttospeech.VoiceSelectionParams(
         language_code=language_code,
         name=voice_name,
@@ -80,33 +76,22 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=speed  # Adjust speech speed here
+        speaking_rate=speed
     )
     response = google_tts_client.synthesize_speech(
         input=synthesis_input, voice=voice, audio_config=audio_config
     )
     return response.audio_content
 
-
-# Streamlit UI for selecting voice model
 st.title("Arabic Text Harakat and Text to Speech Application")
 
-# Assuming each voice has a corresponding sample in the specified URL structure
-voice_samples = {
-    voice: f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{voice}_sample.mp3"
-    for voice in voice_options.keys()
-}
-
-# Add unique keys to widgets to avoid internal key conflicts
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()), key="voice_model_select")
 
-# Assuming the samples are stored in the 'samples' folder in your GitHub repo
 voice_sample_url = f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{selected_voice}_sample.mp3"
 st.audio(voice_sample_url, format='audio/mp3')
 
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300, key="user_text_input")
 
-# TTS speed option
 speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
 if st.button("Convert to Speech"):
@@ -114,17 +99,24 @@ if st.button("Convert to Speech"):
         with st.spinner('Adding diacritics...'):
             diacritized_text = add_diacritics(user_input)
             if not diacritized_text.startswith("Failed"):
-                # Allow user to modify the diacritized text
                 modified_text = st.text_area("Modify the diacritized text as needed:", diacritized_text, height=300, max_chars=5000)
                 with st.spinner('Generating Speech...'):
                     try:
                         language_code, voice_name, ssml_gender = voice_options[selected_voice]
                         audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
-                        st.audio(audio_data, format='audio/mp3')
+                        now = datetime.datetime.now()
+                        formatted_now = now.strftime("Audio-%Y-%m-%d-%H-%M-%S.mp3")
+                        audio_file = io.BytesIO(audio_data)
+                        audio_file.name = formatted_now
+                        st.download_button(
+                            label="Download Speech",
+                            data=audio_file,
+                            file_name=formatted_now,
+                            mime="audio/mp3"
+                        )
                     except Exception as e:
                         st.error(f"Failed to generate speech: {str(e)}")
             else:
                 st.error(diacritized_text)
     else:
         st.error("Please input text.")
-
