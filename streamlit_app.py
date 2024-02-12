@@ -88,9 +88,53 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
 
 # Initialize session state for selected voice and speech speed
 if 'selected_voice' not in st.session_state:
-    st.session_state.selected_voice = list(voice_options.keys())[0]  # Default to first option
-if 'speech_speed' not in st.session_state:
-    st.session_state.speech_speed = 1.0  # Default speed
+    st.session_state['selected_voice'] = None
+
+# UI for input, diacritization, and modification
+user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
+
+diacritized_text = None
+if st.button("إضافة الحركات وتعديل النص"):
+    diacritized_text = add_diacritics(user_input)
+    if diacritized_text:
+        modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
+
+# Display voice options only if diacritization has been done
+if diacritized_text:
+    st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
+    cols = st.columns(4)  # Adjust based on your layout preference
+    
+    for index, (voice_name, voice_info) in enumerate(voice_options.items()):
+        with cols[index % 4]:
+            st.write(voice_name)
+            audio_html = f"""
+            <audio controls>
+                <source src="{voice_info[3]}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            """
+            html(audio_html)
+            if st.button("اختر", key=f"select_{voice_name}"):
+                st.session_state['selected_voice'] = voice_name
+
+# Adjust speech speed outside of the conditional block
+speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
+
+# Synthesize speech if a voice is selected and diacritized text is available
+if st.session_state['selected_voice'] and diacritized_text:
+    language_code, voice_name, ssml_gender = voice_options[st.session_state['selected_voice']][:3]
+    audio_data = synthesize_speech(diacritized_text, language_code, voice_name, ssml_gender, speech_speed)
+    now = datetime.datetime.now()
+    formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
+    audio_file = io.BytesIO(audio_data)
+    audio_file.name = formatted_now
+    st.audio(audio_data, format='audio/mp3')
+    st.download_button(
+        label="تحميل الكلام",
+        data=audio_file,
+        file_name=formatted_now,
+        mime="audio/mp3"
+    )
 
 # App title and introduction
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
