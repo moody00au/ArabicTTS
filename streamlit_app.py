@@ -25,16 +25,16 @@ st.markdown(
 # Initialize the OpenAI client
 client = OpenAI()
 
-# Define available voice models with user-friendly Arabic names
+# Define available voice models with user-friendly Arabic names and corresponding sample URLs
 voice_options = {
-    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE),
-    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE),
-    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE),
-    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE),
-    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE),
-    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE),
-    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE),
+    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hala.mp3"),
+    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sami.mp3"),
+    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/omar.mp3"),
+    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/samar.mp3"),
+    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/shireen.mp3"),
+    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hadi.mp3"),
+    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sultan.mp3"),
+    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sarah.mp3"),
 }
 
 # Retrieve API key and Google Cloud credentials
@@ -100,15 +100,20 @@ if st.button("إضافة الحركات"):
 if 'diacritized_text' in st.session_state:
     modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=st.session_state['diacritized_text'], height=300, key="modified_text_input")
 
+    # Show samples and select voice model
+    st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
     selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()), key="voice_model_select")
+    sample_url = voice_options[selected_voice][3]  # URL is the fourth item in the tuple
+    st.audio(sample_url)
+
     speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
     if st.button("تحويل إلى كلام"):
         if modified_text:
-            language_code, voice_name, ssml_gender = voice_options[selected_voice]
+            language_code, voice_name, ssml_gender = voice_options[selected_voice][:3]  # Get the first three items
             audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
             now = datetime.datetime.now()
-            formatted_now = now.strftime("Audio-%Y-%m-%d-%H-%M-%S.mp3")
+            formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
             audio_file = io.BytesIO(audio_data)
             audio_file.name = formatted_now
             st.audio(audio_data, format='audio/mp3')
