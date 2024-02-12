@@ -27,14 +27,14 @@ client = OpenAI()
 
 # Define available voice models with user-friendly Arabic names and corresponding sample URLs
 voice_options = {
-    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hala.mp3"),
-    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sami.mp3"),
-    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/omar.mp3"),
-    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/samar.mp3"),
-    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/shireen.mp3"),
-    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hadi.mp3"),
-    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sultan.mp3"),
-    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sarah.mp3"),
+    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hala_sample.mp3"),
+    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sami_sample.mp3"),
+    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/omar_sample.mp3"),
+    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/samar_sample.mp3"),
+    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/shireen_sample.mp3"),
+    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/hadi_sample.mp3"),
+    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sultan_sample.mp3"),
+    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/sarah_sample.mp3"),
 }
 
 # Retrieve API key and Google Cloud credentials
