@@ -52,89 +52,37 @@ def apply_sukoon(text):
     adjusted_text = re.sub(pattern, replace_with_sukoon, text)
     return adjusted_text
 
+# Function to apply Sukoon
+def apply_sukoon(text):
+    diacritics = "[\u064B-\u0651\u0653-\u0654\u0670]"
+    pattern = re.compile(f"({diacritics})(?=[.,،])")
+    def replace_with_sukoon(match):
+        return "\u0652"
+    return re.sub(pattern, replace_with_sukoon, text)
+
+# Function to add diacritics
 def add_diacritics(text):
     try:
-        response = client.chat.completions.create(
+        response = openai.Completion.create(
             model="gpt-4-turbo-preview",
-            messages=[{"role": "user", "content": f"أضف الحركات لهذا النص العربي: '{text}'."}],
+            prompt=f"أضف الحركات لهذا النص العربي: '{text}'.",
             temperature=1,
             max_tokens=3000,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
         )
-        diacritized_text = response.choices[0].message.content
-        adjusted_text = apply_sukoon(diacritized_text)
-        return adjusted_text
+        return apply_sukoon(response.choices[0].text)
     except Exception as e:
-        st.error(f"فشل في إضافة الحركات: {str(e)}")
+        st.error(f"Failed to add diacritics: {e}")
         return None
 
+# Synthesize speech
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
     synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)
-    voice = texttospeech.VoiceSelectionParams(
-        language_code=language_code,
-        name=voice_name,
-        ssml_gender=ssml_gender
-    )
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=speed
-    )
-    response = google_tts_client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
-    return response.audio_content
-
-# Initialize session state for selected voice and speech speed
-if 'selected_voice' not in st.session_state:
-    st.session_state['selected_voice'] = None
-
-# UI for input, diacritization, and modification
-user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
-
-diacritized_text = None
-if st.button("إضافة الحركات وتعديل النص"):
-    diacritized_text = add_diacritics(user_input)
-    if diacritized_text:
-        modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
-
-# Display voice options only if diacritization has been done
-if diacritized_text:
-    st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
-    cols = st.columns(4)  # Adjust based on your layout preference
-    
-    for index, (voice_name, voice_info) in enumerate(voice_options.items()):
-        with cols[index % 4]:
-            st.write(voice_name)
-            audio_html = f"""
-            <audio controls>
-                <source src="{voice_info[3]}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-            """
-            html(audio_html)
-            if st.button("اختر", key=f"select_{voice_name}"):
-                st.session_state['selected_voice'] = voice_name
-
-# Adjust speech speed outside of the conditional block
-speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
-
-# Synthesize speech if a voice is selected and diacritized text is available
-if st.session_state['selected_voice'] and diacritized_text:
-    language_code, voice_name, ssml_gender = voice_options[st.session_state['selected_voice']][:3]
-    audio_data = synthesize_speech(diacritized_text, language_code, voice_name, ssml_gender, speech_speed)
-    now = datetime.datetime.now()
-    formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
-    audio_file = io.BytesIO(audio_data)
-    audio_file.name = formatted_now
-    st.audio(audio_data, format='audio/mp3')
-    st.download_button(
-        label="تحميل الكلام",
-        data=audio_file,
-        file_name=formatted_now,
-        mime="audio/mp3"
-    )
+    voice = texttospeech.VoiceSelectionParams(language_code=language_code, name=voice_name, ssml_gender=ssml_gender)
+    audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3, speaking_rate=speed)
+    return google_tts_client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config).audio_content
 
 # App title and introduction
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
@@ -157,51 +105,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # UI for input, diacritization, and modification
-user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
+user_input = st.text_area("أدخل النص العربي هنا:", height=300)
 if st.button("إضافة الحركات وتعديل النص"):
     diacritized_text = add_diacritics(user_input)
     if diacritized_text:
-        modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
+        modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300)
 
-    # Instead of using a selectbox for voice model selection, display them as clickable boxes with sample previews
-    st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
-    # Define the number of columns you want, based on the number of voice options you have
-    cols_per_row = 4  # Adjust based on your layout preference
-    cols = st.columns(cols_per_row)
-    
-    # Iterate over your voice options and create a box in each column
-    for index, (voice_name, voice_info) in enumerate(voice_options.items()):
-        with cols[index % cols_per_row]:
-            # Display voice name
-            st.write(voice_name)
-            # Audio sample button
-            sample_url = voice_info[3]
-            # Using HTML to embed the audio player directly, for preview
-            audio_html = f"""
-            <audio controls>
-                <source src="{sample_url}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-            """
-            html(audio_html)
-            # Option to select this voice
-            if st.button(f"اختر {voice_name}"):
-                selected_voice = voice_name
+# Voice model selection simplified to a selectbox
+selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()))
 
-    speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
+# Slider for speech speed
+speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0)
 
-    if st.button("تحويل إلى كلام"):
-        if modified_text:
-            language_code, voice_name, ssml_gender = voice_options[selected_voice][:3]  # Get the first three items
-            audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
-            now = datetime.datetime.now()
-            formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
-            audio_file = io.BytesIO(audio_data)
-            audio_file.name = formatted_now
-            st.audio(audio_data, format='audio/mp3')
-            st.download_button(
-                label="تحميل الكلام",
-                data=audio_file,
-                file_name=formatted_now,
-                mime="audio/mp3"
-            )
+# Synthesize speech button
+if st.button("تحويل إلى كلام") and diacritized_text:
+    voice_info = voice_options[selected_voice]
+    audio_data = synthesize_speech(diacritized_text, *voice_info[:3], speech_speed)
+    now = datetime.datetime.now()
+    formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
+    audio_file = io.BytesIO(audio_data)
+    audio_file.name = formatted_now
+    st.audio(audio_data, format='audio/mp3')
+    st.download_button("تحميل الكلام", data=audio_file, file_name=formatted_now, mime="audio/mp3")
+
