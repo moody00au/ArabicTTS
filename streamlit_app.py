@@ -1,6 +1,6 @@
 import streamlit as st
-from streamlit.components.v1 import html
 import openai
+from openai import OpenAI
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 import re
@@ -18,36 +18,28 @@ st.markdown(
     textarea {
         height: 300px !important; /* Set a fixed height for text areas */
     }
-    .audio-btn {
-        width: 24px;
-        height: 24px;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M0 384.662V127.338c0-31.202 34.425-51.202 61.856-35.419l186.297 107.338c20.367 11.756 20.367 41.083 0 52.838L61.856 419.081C34.425 435.864 0 415.864 0 384.662zM448 256c0 141.384-114.616 256-256 256s-256-114.616-256-256 256-256 256-256 256 114.616 256 256z"/></svg>') center/cover no-repeat;
-        border: none;
-        cursor: pointer;
-    }
-    audio::-webkit-media-controls-panel {
-        display: none!important;
-        -webkit-appearance: none;
-    }
-    audio::-webkit-media-controls-play-button {}
-    audio::-webkit-media-controls-volume-slider {}
-    audio::-webkit-media-controls-mute-button {}
-    audio::-webkit-media-controls-timeline {}
-    audio::-webkit-media-controls-current-time-display {}
     </style>
     """,
     unsafe_allow_html=True
 )
 
 # Initialize the OpenAI client
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI()
 
 # Define available voice models with user-friendly Arabic names and corresponding sample URLs
 voice_options = {
-    # Your voice options here...
+    "هالة": ("ar-XA", "ar-XA-Standard-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Hala_sample.mp3"),
+    "سامي": ("ar-XA", "ar-XA-Standard-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Sami_sample.mp3"),
+    "عمر": ("ar-XA", "ar-XA-Standard-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Omar_sample.mp3"),
+    "سمر": ("ar-XA", "ar-XA-Standard-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Samar_sample.mp3"),
+    "شيرين": ("ar-XA", "ar-XA-Wavenet-A", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Shireen_sample.mp3"),
+    "هادي": ("ar-XA", "ar-XA-Wavenet-B", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Hadi_sample.mp3"),
+    "سلطان": ("ar-XA", "ar-XA-Wavenet-C", texttospeech.SsmlVoiceGender.MALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Sultan_sample.mp3"),
+    "سارة": ("ar-XA", "ar-XA-Wavenet-D", texttospeech.SsmlVoiceGender.FEMALE, "https://raw.githubusercontent.com/moody00au/ArabicTTS/main/Sarah_sample.mp3"),
 }
 
-# Retrieve Google Cloud credentials and initialize TTS client
+# Retrieve API key and Google Cloud credentials
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 google_credentials = service_account.Credentials.from_service_account_info(st.secrets["GOOGLE_CLOUD_CREDENTIALS"])
 google_tts_client = texttospeech.TextToSpeechClient(credentials=google_credentials)
 
@@ -61,63 +53,70 @@ def apply_sukoon(text):
 
 def add_diacritics(text):
     try:
-        response = openai.Completion.create(
-            model="gpt-4",
-            prompt=f"أضف الحركات لهذا النص العربي: '{text}'.",
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=[{"role": "user", "content": f"أضف الحركات لهذا النص العربي: '{text}'."}],
             temperature=1,
             max_tokens=3000,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
         )
-        diacritized_text = response.choices[0].text
+        diacritized_text = response.choices[0].message.content
         adjusted_text = apply_sukoon(diacritized_text)
         return adjusted_text
     except Exception as e:
         st.error(f"فشل في إضافة الحركات: {str(e)}")
         return None
 
-# Initialize session state for selected voice and speech speed
-if 'selected_voice' not in st.session_state:
-    st.session_state.selected_voice = list(voice_options.keys())[0]  # Default to first option
-if 'speech_speed' not in st.session_state:
-    st.session_state.speech_speed = 1.0  # Default speed
+def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
+    synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code=language_code,
+        name=voice_name,
+        ssml_gender=ssml_gender
+    )
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=speed
+    )
+    response = google_tts_client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
+    return response.audio_content
 
 # App title and introduction
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
 
+# Detailed explanation in Arabic
+st.markdown("""
+#### كيف يعمل التطبيق:
+1. **أدخل النص العربي**: اكتب النص الذي تريد تحويله إلى كلام في المربع المخصص.
+2. **إضافة الحركات**: يستخدم التطبيق تقنية من OpenAI لإضافة الحركات إلى النص العربي لتحسين دقة النطق.
+3. **تعديل النص**: بعد إضافة الحركات، يمكنك تعديل النص كما تريد.
+4. **اختر نموذج الصوت**: استمع إلى عينات الأصوات واختر الصوت الذي تفضله لتحويل النص إلى كلام.
+5. **تحويل النص إلى كلام**: يقوم التطبيق بتحويل النص المعدل إلى كلام باستخدام Google Cloud Text-to-Speech.
+
+#### التقنيات المستخدمة:
+- **Streamlit**: لإنشاء واجهة المستخدم الخاصة بالتطبيق.
+- **OpenAI GPT-4**: لإضافة الحركات إلى النص العربي.
+- **Google Cloud Text-to-Speech**: لتحويل النص إلى كلام بطريقة طبيعية.
+
+يتم استخدام الحركات لضمان دقة النطق ووضوح المعنى، مما يساعد في تحسين جودة النص المحول إلى كلام.
+""", unsafe_allow_html=True)
+
 # UI for input, diacritization, and modification
 user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
-diacritized_text = None
 if st.button("إضافة الحركات وتعديل النص"):
     diacritized_text = add_diacritics(user_input)
     if diacritized_text:
         modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
 
-    # Instead of using a selectbox for voice model selection, display them as clickable boxes with sample previews
+    # Show samples and select voice model
     st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
-    # Define the number of columns you want, based on the number of voice options you have
-    cols_per_row = 4  # Adjust based on your layout preference
-    cols = st.columns(cols_per_row)
-    
-    # Iterate over your voice options and create a box in each column
-    for index, (voice_name, voice_info) in enumerate(voice_options.items()):
-        with cols[index % cols_per_row]:
-            # Display voice name
-            st.write(voice_name)
-            # Audio sample button
-            sample_url = voice_info[3]
-            # Using HTML to embed the audio player directly, for preview
-            audio_html = f"""
-            <audio controls>
-                <source src="{sample_url}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-            """
-            html(audio_html)
-            # Option to select this voice
-            if st.button(f"اختر {voice_name}"):
-                selected_voice = voice_name
+    selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()), key="voice_model_select")
+    sample_url = voice_options[selected_voice][3]  # URL is the fourth item in the tuple
+    st.audio(sample_url)
 
     speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
