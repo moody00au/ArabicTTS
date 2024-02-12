@@ -87,18 +87,13 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
 # App title
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
 
-# Step 1: Input text and add diacritics
+# Single step for input, diacritization, and modification
 user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
-if st.button("إضافة الحركات"):
+if st.button("إضافة الحركات وتعديل النص"):
     diacritized_text = add_diacritics(user_input)
     if diacritized_text:
-        # Save diacritized text in session state for further actions
-        st.session_state['diacritized_text'] = diacritized_text
-        st.text_area("مراجعة النص مع الحركات:", value=diacritized_text, height=300, key="diacritized_text_input", disabled=True)
-
-# Step 2: Modify diacritized text if needed
-if 'diacritized_text' in st.session_state:
-    modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=st.session_state['diacritized_text'], height=300, key="modified_text_input")
+        # Directly modify the diacritized text without showing it in a separate, disabled text area
+        modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
 
     # Show samples and select voice model
     st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
