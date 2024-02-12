@@ -65,7 +65,8 @@ def add_diacritics(text):
         adjusted_text = apply_sukoon(diacritized_text)
         return adjusted_text
     except Exception as e:
-        return f"Failed to add diacritics: {str(e)}"
+        st.error(f"Failed to add diacritics: {str(e)}")
+        return None
 
 def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, speed):
     synthesis_input = texttospeech.SynthesisInput(text=adjusted_text)
@@ -87,36 +88,27 @@ st.title("Arabic Text Harakat and Text to Speech Application")
 
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()), key="voice_model_select")
 
-voice_sample_url = f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{selected_voice}_sample.mp3"
-st.audio(voice_sample_url, format='audio/mp3')
-
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300, key="user_text_input")
 
 speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
-if st.button("Convert to Speech"):
+if st.button("Add Diacritics and Convert to Speech"):
     if user_input:
-        with st.spinner('Adding diacritics...'):
-            diacritized_text = add_diacritics(user_input)
-            if not diacritized_text.startswith("Failed"):
-                modified_text = st.text_area("Modify the diacritized text as needed:", diacritized_text, height=300, max_chars=5000)
-                with st.spinner('Generating Speech...'):
-                    try:
-                        language_code, voice_name, ssml_gender = voice_options[selected_voice]
-                        audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
-                        now = datetime.datetime.now()
-                        formatted_now = now.strftime("Audio-%Y-%m-%d-%H-%M-%S.mp3")
-                        audio_file = io.BytesIO(audio_data)
-                        audio_file.name = formatted_now
-                        st.download_button(
-                            label="Download Speech",
-                            data=audio_file,
-                            file_name=formatted_now,
-                            mime="audio/mp3"
-                        )
-                    except Exception as e:
-                        st.error(f"Failed to generate speech: {str(e)}")
-            else:
-                st.error(diacritized_text)
+        diacritized_text = add_diacritics(user_input)
+        if diacritized_text:
+            modified_text = st.text_area("Modify the diacritized text as needed:", diacritized_text, height=300, max_chars=5000, key="modified_text_input")
+            language_code, voice_name, ssml_gender = voice_options[selected_voice]
+            audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
+            now = datetime.datetime.now()
+            formatted_now = now.strftime("Audio-%Y-%m-%d-%H-%M-%S.mp3")
+            audio_file = io.BytesIO(audio_data)
+            audio_file.name = formatted_now
+            st.audio(audio_data, format='audio/mp3')
+            st.download_button(
+                label="Download Speech",
+                data=audio_file,
+                file_name=formatted_now,
+                mime="audio/mp3"
+            )
     else:
         st.error("Please input text.")
