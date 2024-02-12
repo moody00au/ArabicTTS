@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit.components.v1 import html
 import openai
 from openai import OpenAI
 from google.cloud import texttospeech
@@ -112,11 +113,30 @@ if st.button("إضافة الحركات وتعديل النص"):
     if diacritized_text:
         modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
 
-    # Show samples and select voice model
+    # Instead of using a selectbox for voice model selection, display them as clickable boxes with sample previews
     st.write("استمع إلى نماذج الأصوات قبل الاختيار:")
-    selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()), key="voice_model_select")
-    sample_url = voice_options[selected_voice][3]  # URL is the fourth item in the tuple
-    st.audio(sample_url)
+    # Define the number of columns you want, based on the number of voice options you have
+    cols_per_row = 4  # Adjust based on your layout preference
+    cols = st.columns(cols_per_row)
+    
+    # Iterate over your voice options and create a box in each column
+    for index, (voice_name, voice_info) in enumerate(voice_options.items()):
+        with cols[index % cols_per_row]:
+            # Display voice name
+            st.write(voice_name)
+            # Audio sample button
+            sample_url = voice_info[3]
+            # Using HTML to embed the audio player directly, for preview
+            audio_html = f"""
+            <audio controls>
+                <source src="{sample_url}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            """
+            html(audio_html)
+            # Option to select this voice
+            if st.button(f"اختر {voice_name}"):
+                selected_voice = voice_name
 
     speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0, key="speech_speed_slider")
 
