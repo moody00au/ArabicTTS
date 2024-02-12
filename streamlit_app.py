@@ -119,14 +119,15 @@ selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(vo
 # Slider for speech speed
 speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0)
 
-# Synthesize speech button
-if st.button("تحويل إلى كلام") and diacritized_text:
-    voice_info = voice_options[selected_voice]
-    audio_data = synthesize_speech(diacritized_text, *voice_info[:3], speech_speed)
-    now = datetime.datetime.now()
-    formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
-    audio_file = io.BytesIO(audio_data)
-    audio_file.name = formatted_now
-    st.audio(audio_data, format='audio/mp3')
-    st.download_button("تحميل الكلام", data=audio_file, file_name=formatted_now, mime="audio/mp3")
+# After diacritization
+if diacritized_text:
+    st.session_state['diacritized_text'] = diacritized_text  # Store in session state if needed
 
+# Button to trigger speech synthesis
+if st.button("تحويل إلى كلام"):
+    # Check here if diacritized_text or its equivalent session state variable is set
+    if 'diacritized_text' in st.session_state and st.session_state['diacritized_text']:
+        # Proceed with speech synthesis
+        voice_info = voice_options[selected_voice]
+        audio_data = synthesize_speech(st.session_state['diacritized_text'], *voice_info[:3], speech_speed)
+        # Remaining code for handling audio data...
