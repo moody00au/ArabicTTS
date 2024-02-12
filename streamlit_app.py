@@ -63,18 +63,20 @@ def apply_sukoon(text):
 # Function to add diacritics
 def add_diacritics(text):
     try:
-        response = openai.Completion.create(
+        response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
-            prompt=f"أضف الحركات لهذا النص العربي: '{text}'.",
+            messages=[{"role": "user", "content": f"أضف الحركات لهذا النص العربي: '{text}'."}],
             temperature=1,
             max_tokens=3000,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
         )
-        return apply_sukoon(response.choices[0].text)
+        diacritized_text = response.choices[0].message.content
+        adjusted_text = apply_sukoon(diacritized_text)
+        return adjusted_text
     except Exception as e:
-        st.error(f"Failed to add diacritics: {e}")
+        st.error(f"فشل في إضافة الحركات: {str(e)}")
         return None
 
 # Synthesize speech
