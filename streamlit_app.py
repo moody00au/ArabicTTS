@@ -7,15 +7,16 @@ import re
 import datetime
 import io
 
-# Custom CSS to set the text area to RTL and potentially adjust its style
+# Custom CSS to enhance RTL layout and appearance
 st.markdown(
     """
     <style>
-    /* Targeting all textareas */
-    textarea {
-        direction: RTL; /* Right to Left */
+    body, textarea, select, input, button {
+        direction: RTL; /* Apply Right to Left layout */
         text-align: right; /* Align text to the right */
-        height: 300px !important; /* Example of setting a larger fixed height */
+    }
+    textarea {
+        height: 300px !important; /* Set a fixed height for text areas */
     }
     </style>
     """,
@@ -84,15 +85,31 @@ def synthesize_speech(adjusted_text, language_code, voice_name, ssml_gender, spe
     )
     return response.audio_content
 
-# App title
+# App title and introduction
 st.title("تطبيق تحويل النص العربي إلى كلام مع الحركات")
 
-# Single step for input, diacritization, and modification
+# Detailed explanation in Arabic
+st.markdown("""
+#### كيف يعمل التطبيق:
+1. **أدخل النص العربي**: اكتب النص الذي تريد تحويله إلى كلام في المربع المخصص.
+2. **إضافة الحركات**: يستخدم التطبيق تقنية من OpenAI لإضافة الحركات إلى النص العربي لتحسين دقة النطق.
+3. **تعديل النص**: بعد إضافة الحركات، يمكنك تعديل النص كما تريد.
+4. **اختر نموذج الصوت**: استمع إلى عينات الأصوات واختر الصوت الذي تفضله لتحويل النص إلى كلام.
+5. **تحويل النص إلى كلام**: يقوم التطبيق بتحويل النص المعدل إلى كلام باستخدام Google Cloud Text-to-Speech.
+
+#### التقنيات المستخدمة:
+- **Streamlit**: لإنشاء واجهة المستخدم الخاصة بالتطبيق.
+- **OpenAI GPT-4**: لإضافة الحركات إلى النص العربي.
+- **Google Cloud Text-to-Speech**: لتحويل النص إلى كلام بطريقة طبيعية.
+
+يتم استخدام الحركات لضمان دقة النطق ووضوح المعنى، مما يساعد في تحسين جودة النص المحول إلى كلام.
+""", unsafe_allow_html=True)
+
+# UI for input, diacritization, and modification
 user_input = st.text_area("أدخل النص العربي هنا:", value="", height=300, key="user_text_input")
 if st.button("إضافة الحركات وتعديل النص"):
     diacritized_text = add_diacritics(user_input)
     if diacritized_text:
-        # Directly modify the diacritized text without showing it in a separate, disabled text area
         modified_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300, key="modified_text_input")
 
     # Show samples and select voice model
