@@ -120,14 +120,34 @@ selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(vo
 speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0)
 
 # After diacritization
-if diacritized_text:
-    st.session_state['diacritized_text'] = diacritized_text  # Store in session state if needed
+# Use Streamlit session state to store and manage the diacritized text
+if 'diacritized_text' not in st.session_state:
+    st.session_state.diacritized_text = ""
 
-# Button to trigger speech synthesis
+user_input = st.text_area("أدخل النص العربي هنا:", height=300)
+
+# Button to add diacritics to the input text
+if st.button("إضافة الحركات وتعديل النص"):
+    diacritized_text = add_diacritics(user_input)
+    if diacritized_text:
+        st.session_state.diacritized_text = diacritized_text
+        # Provide a text area for users to see and modify the diacritized text
+        st.session_state.diacritized_text = st.text_area("تعديل النص مع الحركات حسب الحاجة:", value=diacritized_text, height=300)
+
+# Select box for choosing the voice model
+selected_voice = st.selectbox("اختر نموذج الصوت:", options=list(voice_options.keys()))
+
+# Slider for speech speed
+speech_speed = st.slider("سرعة الكلام", 0.5, 2.0, 1.0)
+
+# Button to convert text to speech
 if st.button("تحويل إلى كلام"):
-    # Check here if diacritized_text or its equivalent session state variable is set
-    if 'diacritized_text' in st.session_state and st.session_state['diacritized_text']:
-        # Proceed with speech synthesis
+    if st.session_state.diacritized_text:  # Ensure there's diacritized text to convert
         voice_info = voice_options[selected_voice]
-        audio_data = synthesize_speech(st.session_state['diacritized_text'], *voice_info[:3], speech_speed)
-        # Remaining code for handling audio data...
+        audio_data = synthesize_speech(st.session_state.diacritized_text, *voice_info[:3], speech_speed)
+        now = datetime.datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S") + ".mp3"
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = formatted_now
+        st.audio(audio_data, format='audio/mp3')
+        st.download_button("تحميل الكلام", data=audio_file, file_name=formatted_now, mime="audio/mp3")
