@@ -5,7 +5,6 @@ from google.cloud import texttospeech
 from google.oauth2 import service_account
 import re
 
-
 # Custom CSS to set the text area to RTL and potentially adjust its style
 st.markdown(
     """
@@ -71,7 +70,7 @@ def add_diacritics(text):
     except Exception as e:
         return f"Failed to add diacritics: {str(e)}"
 
-def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender):
+def synthesize_speech(adjuste_text, language_code, voice_name, ssml_gender, speed):
     synthesis_input = texttospeech.SynthesisInput(text=text_with_harakat)
     voice = texttospeech.VoiceSelectionParams(
         language_code=language_code,
@@ -79,35 +78,43 @@ def synthesize_speech(text_with_harakat, language_code, voice_name, ssml_gender)
         ssml_gender=ssml_gender
     )
     audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=speed  # Adjust speech speed here
     )
     response = google_tts_client.synthesize_speech(
         input=synthesis_input, voice=voice, audio_config=audio_config
     )
     return response.audio_content
-    
-# Streamlit UI
+
+# Streamlit UI for selecting voice model
 st.title("Arabic Text Harakat and Text to Speech Application")
 selected_voice = st.selectbox("Choose a voice model:", list(voice_options.keys()))
 
+# Assuming the samples are stored in the 'samples' folder in your GitHub repo
+voice_sample_url = f"https://raw.githubusercontent.com/moody00au/ArabicTTS/main/{selected_voice}_sample.mp3"
+st.audio(voice_sample_url, format='audio/mp3')
+
 user_input = st.text_area("Enter Arabic text here:", "هنا يمكنك كتابة النص العربي", max_chars=5000, height=300)
+
+# TTS speed option
+speech_speed = st.slider("Speech Speed", 0.5, 2.0, 1.0)
 
 if st.button("Convert to Speech"):
     if user_input:
         with st.spinner('Adding diacritics...'):
             diacritized_text = add_diacritics(user_input)
             if not diacritized_text.startswith("Failed"):
-                # Display the adjusted text with sukoon applied
-                st.text_area("Diacritized Text", diacritized_text, height=300, max_chars=5000)
+                # Allow user to modify the diacritized text
+                modified_text = st.text_area("Modify the diacritized text as needed:", diacritized_text, height=300, max_chars=5000)
+                with st.spinner('Generating Speech...'):
+                    try:
+                        language_code, voice_name, ssml_gender = voice_options[selected_voice]
+                        audio_data = synthesize_speech(modified_text, language_code, voice_name, ssml_gender, speech_speed)
+                        st.audio(audio_data, format='audio/mp3')
+                    except Exception as e:
+                        st.error(f"Failed to generate speech: {str(e)}")
             else:
                 st.error(diacritized_text)
-        
-        with st.spinner('Generating Speech...'):
-            try:
-                language_code, voice_name, ssml_gender = voice_options[selected_voice]
-                audio_data = synthesize_speech(diacritized_text, language_code, voice_name, ssml_gender)
-                st.audio(audio_data, format='audio/mp3')
-            except Exception as e:
-                st.error(f"Failed to generate speech: {str(e)}")
     else:
         st.error("Please input text.")
+
